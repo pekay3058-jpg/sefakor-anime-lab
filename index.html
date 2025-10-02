@@ -1,858 +1,230 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Sefakor Anime Lab — Photo Editor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sefakor Anime Lab</title>
 <style>
-/* ------------------------ Base Theme ------------------------ */
-:root{
-  --bg:#0b0f14;
-  --panel:#0f1720;
-  --muted:#9aa4b2;
-  --accent1:#7c3aed;    /* purple */
-  --accent2:#00d4ff;    /* cyan */
-  --glass: rgba(255,255,255,0.04);
-  --glass-border: rgba(255,255,255,0.06);
-  --success: #22c55e;
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-body{
-  background: linear-gradient(180deg, #05060a 0%, #08101a 100%);
-  color:#ecf0f6;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-}
-
-/* ------------------------ Layout ------------------------ */
-.app {
-  max-width:1200px;
-  margin:28px auto;
-  padding:20px;
-}
-.header{
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-}
-.brand{
-  display:flex;gap:12px;align-items:center;
-}
-.logo {
-  width:56px;height:56px;border-radius:12px;
-  background:linear-gradient(135deg,var(--accent1),var(--accent2));
-  display:flex;align-items:center;justify-content:center;font-weight:700;
-  box-shadow: 0 6px 20px rgba(124,58,237,0.12), inset 0 -4px 12px rgba(0,0,0,0.25);
-}
-.title {font-size:20px;font-weight:700;letter-spacing:0.2px}
-.tag {font-size:13px;color:var(--muted)}
-
-/* main panel */
-.main {
-  margin-top:18px;
-  display:grid;
-  grid-template-columns: 360px 1fr;
-  gap:18px;
-}
-
-/* left column (tools & styles) */
-.sidebar {
-  background:linear-gradient(180deg,var(--panel), #0b1220);
-  border-radius:12px;padding:14px;border:1px solid var(--glass-border);
-  box-shadow: 0 10px 30px rgba(2,6,23,0.6);
-}
-.tabs {display:flex;gap:8px;margin-bottom:12px}
-.tab-btn{
-  padding:10px 12px;border-radius:10px;background:transparent;border:1px solid transparent;
-  color:var(--muted);font-weight:600;cursor:pointer;font-size:13px;
-}
-.tab-btn.active {background: linear-gradient(90deg, rgba(124,58,237,0.12), rgba(0,212,255,0.06)); color:#fff;border:1px solid rgba(124,58,237,0.18); box-shadow: 0 6px 18px rgba(0,0,0,0.6);}
-.section-title{font-weight:700;margin:8px 0 10px}
-
-/* styles grid */
-.styles-grid {display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.style-card {
-  background:var(--glass);border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,0.03);
-  cursor:pointer;transition:all .18s;display:flex;gap:10px;align-items:center;
-}
-.style-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
-.style-thumb{width:64px;height:64px;border-radius:8px;flex:0 0 64px;display:flex;align-items:center;justify-content:center}
-.style-meta{flex:1}
-.style-name{font-weight:700}
-.style-sub{font-size:12px;color:var(--muted)}
-
-/* premium buttons */
-.premium {
-  margin-top:12px;display:flex;gap:8px;
-}
-.premium .vip {
-  flex:1;padding:10px;border-radius:10px;background:linear-gradient(90deg,#ffd36b,#ff8a00);
-  color:#111;font-weight:800;cursor:pointer;border:none;box-shadow:0 8px 28px rgba(255,138,0,0.12);
-}
-.premium .vvip {
-  flex:1;padding:10px;border-radius:10px;background:linear-gradient(90deg,#9be6ff,#7c3aed);
-  color:#071127;font-weight:800;cursor:pointer;border:none;box-shadow:0 8px 28px rgba(124,58,237,0.12);
-}
-
-/* right column (editor canvas) */
-.editor {
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-radius:12px;padding:14px;border:1px solid var(--glass-border);
-}
-.canvas-wrap {display:flex;gap:14px;align-items:flex-start}
-.canvas-panel {flex:1;display:flex;flex-direction:column;align-items:center}
-canvas{border-radius:10px;background:#0a0f14;max-width:100%;width:100%;box-shadow:0 12px 40px rgba(3,6,12,0.6)}
-controls {display:block}
-
-/* toolbar area */
-.toolbar {
-  display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap;
-}
-.tool-btn{
-  padding:8px 10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--muted);cursor:pointer;font-weight:700;
-}
-.tool-btn.primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#fff;border:none;box-shadow:0 10px 30px rgba(12,6,20,0.6)}
-.range {display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
-.range input[type=range]{width:160px}
-
-/* overlays & popups */
-.modal {
-  position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;
-  background:rgba(2,6,23,0.6);z-index:60;
-}
-.modal-card{background:linear-gradient(180deg,#071022,#0b1320);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);max-width:420px;text-align:center}
-.modal-card h3{margin:0 0 10px}
-.modal-close{margin-top:12px;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--muted);cursor:pointer}
-
-/* small notes */
-.note{font-size:13px;color:var(--muted);margin-top:10px}
-
-/* responsive */
-@media (max-width:980px){
-  .main{grid-template-columns:1fr; }
-  .styles-grid{grid-template-columns:repeat(3,1fr)}
-}
-@media (max-width:600px){
-  .styles-grid{grid-template-columns:repeat(2,1fr)}
-  .logo{width:46px;height:46px}
-}
+  body {
+    font-family: Arial, sans-serif;
+    background: #121212;
+    color: #eee;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  header {
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
+    padding: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 8px #000;
+  }
+  nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    background: #1e1e1e;
+    padding: 10px;
+  }
+  nav button {
+    background: #2c2c2c;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #fff;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+  nav button:hover { background: #444; }
+  .active { background: #2575fc; }
+  #editor {
+    padding: 20px;
+  }
+  #upload {
+    margin: 15px 0;
+  }
+  canvas {
+    border: 2px solid #444;
+    border-radius: 10px;
+    margin: 20px auto;
+    display: block;
+    background: #222;
+    max-width: 90%;
+  }
+  .tools, .styles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    transition: 0.3s;
+  }
+  .btn:hover { transform: scale(1.05); }
+  .anime { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
+  .cartoon { background: linear-gradient(45deg, #ff9800, #ffc107); }
+  .comic { background: linear-gradient(45deg, #00c6ff, #0072ff); }
+  .clay { background: linear-gradient(45deg, #8e2de2, #4a00e0); }
+  .lowpoly { background: linear-gradient(45deg, #06beb6, #48b1bf); }
+  .cgi { background: linear-gradient(45deg, #11998e, #38ef7d); }
+  .manga { background: linear-gradient(45deg, #fc466b, #3f5efb); }
+  .vip { background: linear-gradient(45deg, gold, darkorange); }
+  .vvip { background: linear-gradient(45deg, #e0e0e0, #9e9e9e); color: black; }
+  /* Modal popup */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-content {
+    background: #222;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 300px;
+    color: white;
+    box-shadow: 0 0 20px #000;
+  }
+  .modal-content h2 { margin: 0 0 15px; }
+  .close {
+    background: crimson;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <div class="brand">
-      <div class="logo">SA</div>
-      <div>
-        <div class="title">Sefakor Anime Lab</div>
-        <div class="tag">Transform photos into 3D-stylized characters — pro quality UI</div>
-      </div>
-    </div>
-    <div>
-      <div style="text-align:right">
-        <div style="font-size:13px;color:var(--muted)">Free styles • VIP/VVIP locked</div>
-        <div style="margin-top:6px">
-          <button id="helpBtn" class="tool-btn">How it works</button>
-        </div>
-      </div>
-    </div>
+<header>✨ Sefakor Anime Lab ✨</header>
+
+<nav>
+  <button id="tab-free" class="active" onclick="showTab('free')">FREE</button>
+  <button id="tab-vip" onclick="showTab('vip')">VIP</button>
+  <button id="tab-vvip" onclick="showTab('vvip')">VVIP</button>
+</nav>
+
+<div id="editor">
+  <!-- Upload -->
+  <input type="file" id="upload" accept="image/*"><br>
+  <canvas id="canvas"></canvas>
+
+  <!-- Free styles -->
+  <div id="free" class="styles">
+    <button class="btn anime" onclick="applyStyle('anime')">Anime</button>
+    <button class="btn cartoon" onclick="applyStyle('cartoon')">Cartoon</button>
+    <button class="btn comic" onclick="applyStyle('comic')">Comic</button>
+    <button class="btn clay" onclick="applyStyle('clay')">Clay</button>
+    <button class="btn lowpoly" onclick="applyStyle('lowpoly')">Low Poly</button>
+    <button class="btn cgi" onclick="applyStyle('cgi')">CGI</button>
+    <button class="btn manga" onclick="applyStyle('manga')">Manga</button>
   </div>
 
-  <div class="main">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="tabs" role="tablist" aria-label="style tabs">
-        <button class="tab-btn active" id="tab-free">FREE</button>
-        <button class="tab-btn" id="tab-vip">VIP</button>
-        <button class="tab-btn" id="tab-vvip">VVIP</button>
-      </div>
+  <!-- VIP -->
+  <div id="vip" class="styles" style="display:none;">
+    <button class="btn vip" onclick="openModal('VIP 🚀 Features Coming Soon!')">VIP Access</button>
+  </div>
 
-      <div id="freeSection">
-        <div class="section-title">Choose a free style</div>
-        <div class="styles-grid" id="stylesGrid">
-          <!-- style cards injected by JS -->
-        </div>
-        <div class="note">Tap a style to preview. Use the Generate (AI) button to call your server-side model when ready.</div>
-      </div>
+  <!-- VVIP -->
+  <div id="vvip" class="styles" style="display:none;">
+    <button class="btn vvip" onclick="openModal('🌌 VVIP Exclusive Features Coming Soon!')">VVIP Access</button>
+  </div>
 
-      <div id="vipSection" style="display:none">
-        <div class="section-title">VIP Features</div>
-        <div style="padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));">
-          <strong style="color:#ffd36b">VIP</strong> content coming soon — premium 1-click composites, multi-character composites, and hero companions.
-        </div>
-      </div>
-
-      <div id="vvipSection" style="display:none">
-        <div class="section-title">VVIP</div>
-        <div style="padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));">
-          <strong style="color:#9be6ff">VVIP</strong> coming soon — exclusive studio renders, batch jobs, priority queue.
-        </div>
-      </div>
-
-      <div style="margin-top:12px" class="premium">
-        <button class="vip" id="vipBtn">VIP</button>
-        <button class="vvip" id="vvipBtn">VVIP</button>
-      </div>
-
-    </div>
-
-    <!-- Editor -->
-    <div class="editor">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-weight:800">Editor</div>
-        <div style="color:var(--muted);font-size:13px">Advanced local previews • Add AI later</div>
-      </div>
-
-      <div style="height:12px"></div>
-
-      <div class="canvas-wrap">
-        <div class="canvas-panel">
-          <canvas id="mainCanvas" width="780" height="520"></canvas>
-          <div class="toolbar">
-            <label class="tool-btn" style="display:inline-flex;align-items:center;gap:8px">
-              Upload
-              <input id="fileInput" type="file" accept="image/*" style="display:none"/>
-            </label>
-            <button class="tool-btn" id="btn-crop">Crop</button>
-            <button class="tool-btn" id="btn-rotate">Rotate</button>
-            <button class="tool-btn" id="btn-flip">Flip</button>
-            <button class="tool-btn primary" id="btn-generate">Generate (AI)</button>
-            <button class="tool-btn" id="btn-reset">Reset</button>
-            <button class="tool-btn" id="btn-undo">Undo</button>
-            <button class="tool-btn" id="btn-redo">Redo</button>
-            <button class="tool-btn" id="btn-download">Download</button>
-          </div>
-
-          <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-            <div class="range"><div style="width:84px;font-size:13px;color:var(--muted)">Brightness</div><input id="rangeBrightness" type="range" min="50" max="150" value="100"></div>
-            <div class="range"><div style="width:84px;font-size:13px;color:var(--muted)">Contrast</div><input id="rangeContrast" type="range" min="50" max="150" value="100"></div>
-            <div class="range"><div style="width:84px;font-size:13px;color:var(--muted)">Saturation</div><input id="rangeSaturation" type="range" min="50" max="150" value="100"></div>
-          </div>
-
-        </div>
-      </div>
-
-      <div class="note" style="margin-top:12px">Tip: Use the style cards to preview. AI generate will call your server endpoint if configured. Local previews are high-quality client-side effects to evaluate the look immediately.</div>
-    </div>
+  <!-- Editor tools -->
+  <div class="tools">
+    <button class="btn" style="background:#555;" onclick="rotate()">Rotate</button>
+    <button class="btn" style="background:#777;" onclick="flip()">Flip</button>
+    <button class="btn" style="background:#999;" onclick="adjust('bright')">Brightness</button>
+    <button class="btn" style="background:#bbb;color:#000;" onclick="adjust('contrast')">Contrast</button>
+    <button class="btn" style="background:#2575fc;" onclick="downloadImage()">Download</button>
   </div>
 </div>
 
-<!-- Modal placeholders -->
-<div id="modal" style="display:none"></div>
+<!-- Modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h2 id="modal-text"></h2>
+    <button class="close" onclick="closeModal()">Close</button>
+  </div>
+</div>
 
 <script>
-/* =========================
-   Client-side editor logic
-   Single-file, no external libs.
-   - style cards injected and represent Cartoon/Anime/Comic/Clay/LowPoly/CGI/Manga
-   - local stylize functions apply professional canvas transforms
-   - a single "server hook" function callServerStylize() is left for later
-   ========================= */
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let img = new Image();
 
-const STYLE_DEFS = [
-  { id:'anime', name:'Anime 3D', desc:'Large expressive eyes, cel-shaded 3D vibe', color1:'#ffd6f7', color2:'#a78bfa' },
-  { id:'cartoon', name:'Cartoon Toy', desc:'Smooth surfaces, glossy toy look', color1:'#ffddc7', color2:'#ff8a65' },
-  { id:'comic', name:'Comic Book', desc:'Bold ink outlines and halftone shading', color1:'#ffef9a', color2:'#ffb86b' },
-  { id:'clay', name:'Clay / Plasticine', desc:'Soft sculpted toy look with warm light', color1:'#ffd6b8', color2:'#f59e0b' },
-  { id:'lowpoly', name:'Low Poly', desc:'Faceted geometry, stylized polygons', color1:'#cde6ff', color2:'#60a5fa' },
-  { id:'cgi', name:'CGI Realistic', desc:'High detail 3D render, studio lighting', color1:'#d3f8ff', color2:'#00d4ff' },
-  { id:'manga', name:'Manga Sketch', desc:'Black and white stylized manga lines', color1:'#f1f5f9', color2:'#64748b' }
-];
-
-/* ---------- inject style cards ---------- */
-const stylesGrid = document.getElementById('stylesGrid');
-let selectedStyle = STYLE_DEFS[0].id;
-
-STYLE_DEFS.forEach(def=>{
-  const el = document.createElement('div');
-  el.className = 'style-card';
-  el.dataset.style = def.id;
-  el.innerHTML = `
-    <div class="style-thumb" style="background:linear-gradient(135deg,${def.color1},${def.color2});">
-      ${svgThumbnail(def.id)}
-    </div>
-    <div class="style-meta">
-      <div class="style-name">${def.name}</div>
-      <div class="style-sub">${def.desc}</div>
-    </div>
-  `;
-  el.onclick = ()=>{ selectStyle(def.id, el); };
-  stylesGrid.appendChild(el);
-});
-function selectStyle(id, el){
-  document.querySelectorAll('.style-card').forEach(x=>x.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedStyle = id;
-}
-document.querySelectorAll('.style-card')[0].classList.add('selected');
-
-/* ---------- canvas & image state ---------- */
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d', { alpha: false });
-let baseImage = null;         // original Image object
-let workingImageData = null;  // ImageData for undo/redo
-let undoStack = [], redoStack = [];
-
-/* utilities */
-function fitCanvasToImage(img){
-  const maxW = 1000;
-  let w = img.width, h = img.height;
-  if(w > maxW){ h = Math.round(h * (maxW / w)); w = maxW; }
-  canvas.width = w; canvas.height = h;
-}
-function pushUndo(){
-  try {
-    undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));
-    if(undoStack.length > 30) undoStack.shift();
-    redoStack = [];
-  } catch(e) { console.warn('pushUndo failed', e) }
-}
-function applyImageToCanvas(img){
-  fitCanvasToImage(img);
-  ctx.fillStyle = '#0b0f14'; ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  pushUndo();
-}
-
-/* load user image */
-document.getElementById('fileInput').addEventListener('change', e=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = ()=> {
-    const img = new Image();
-    img.onload = ()=>{
-      baseImage = img;
-      applyImageToCanvas(img);
+  document.getElementById('upload').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      img.onload = () => {
+        canvas.width = img.width/2;
+        canvas.height = img.height/2;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = ev.target.result;
     };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(f);
-});
-
-/* toolbar events */
-document.getElementById('btn-reset').addEventListener('click', ()=>{
-  if(!baseImage) return;
-  applyImageToCanvas(baseImage);
-  undoStack = []; redoStack = [];
-});
-
-document.getElementById('btn-undo').addEventListener('click', ()=>{
-  if(!undoStack.length) return;
-  redoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));
-  const imgdata = undoStack.pop();
-  ctx.putImageData(imgdata, 0, 0);
-});
-document.getElementById('btn-redo').addEventListener('click', ()=>{
-  if(!redoStack.length) return;
-  undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));
-  const imgdata = redoStack.pop();
-  ctx.putImageData(imgdata, 0, 0);
-});
-
-document.getElementById('btn-download').addEventListener('click', ()=>{
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png', 0.95);
-  a.download = `sefakor_${selectedStyle}.png`;
-  a.click();
-});
-
-/* rotate & flip */
-document.getElementById('btn-rotate').addEventListener('click', ()=>{
-  if(!baseImage) return;
-  // rotate 90deg clockwise
-  const temp = document.createElement('canvas'); const tctx = temp.getContext('2d');
-  temp.width = canvas.height; temp.height = canvas.width;
-  tctx.translate(temp.width/2,temp.height/2);
-  tctx.rotate(Math.PI/2);
-  tctx.drawImage(canvas, -canvas.width/2, -canvas.height/2);
-  canvas.width = temp.width; canvas.height = temp.height;
-  ctx.drawImage(temp,0,0);
-  pushUndo();
-});
-document.getElementById('btn-flip').addEventListener('click', ()=>{
-  if(!baseImage) return;
-  const temp = document.createElement('canvas'); const tctx = temp.getContext('2d');
-  temp.width = canvas.width; temp.height = canvas.height;
-  tctx.translate(temp.width,0); tctx.scale(-1,1);
-  tctx.drawImage(canvas,0,0);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(temp,0,0);
-  pushUndo();
-});
-
-/* crop (simple center square crop) */
-document.getElementById('btn-crop').addEventListener('click', ()=>{
-  if(!baseImage) return;
-  const size = Math.min(canvas.width, canvas.height);
-  const sx = Math.round((canvas.width - size)/2);
-  const sy = Math.round((canvas.height - size)/2);
-  const imageData = ctx.getImageData(sx, sy, size, size);
-  canvas.width = size; canvas.height = size;
-  ctx.putImageData(imageData, 0, 0);
-  pushUndo();
-});
-
-/* sliders (brightness/contrast/saturation) adjusted by applying CSS-like filters on a temp canvas */
-const rBrightness = document.getElementById('rangeBrightness');
-const rContrast = document.getElementById('rangeContrast');
-const rSaturation = document.getElementById('rangeSaturation');
-
-[rBrightness, rContrast, rSaturation].forEach(r=>{
-  r.addEventListener('input', ()=> {
-    if(!baseImage) return;
-    // apply filters by redrawing from base image then applying pixel ops
-    const temp = document.createElement('canvas'); temp.width = baseImage.width; temp.height = baseImage.height;
-    const tctx = temp.getContext('2d'); tctx.drawImage(baseImage,0,0);
-    // scale to canvas size
-    const scaled = document.createElement('canvas'); scaled.width=canvas.width; scaled.height=canvas.height;
-    const sctx = scaled.getContext('2d');
-    sctx.drawImage(temp, 0, 0, scaled.width, scaled.height);
-    // apply filter via CSS filter if supported (fast)
-    sctx.filter = `brightness(${rBrightness.value}%) contrast(${rContrast.value}%) saturate(${rSaturation.value}%)`;
-    const out = document.createElement('canvas'); out.width=canvas.width; out.height=canvas.height;
-    const octx = out.getContext('2d');
-    octx.filter = sctx.filter;
-    octx.drawImage(scaled,0,0);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(out, 0, 0);
-    pushUndo();
+    reader.readAsDataURL(file);
   });
-});
 
-/* ---------- style application (local high-quality approximations) ---------- */
-function applyStyleLocally(styleId){
-  if(!baseImage) return alert('Upload a photo first');
-  // create an offscreen canvas and perform stylization
-  const off = document.createElement('canvas'); off.width = baseImage.width; off.height = baseImage.height;
-  const oc = off.getContext('2d');
-  oc.drawImage(baseImage,0,0);
-  // pick stylizer
-  switch(styleId){
-    case 'anime': return animeStylize(oc, off);
-    case 'cartoon': return cartoonStylize(oc, off);
-    case 'comic': return comicStylize(oc, off);
-    case 'clay': return clayStylize(oc, off);
-    case 'lowpoly': return lowpolyStylize(oc, off);
-    case 'cgi': return cgiStylize(oc, off);
-    case 'manga': return mangaStylize(oc, off);
-    default: return null;
+  function applyStyle(style) {
+    alert("Style applied: " + style + " (connect API here later).");
   }
-}
-
-/* helper: downscale & posterize */
-function posterizeImageData(imageData, levels){
-  const d = imageData.data;
-  const step = 256/levels;
-  for(let i=0;i<d.length;i+=4){
-    d[i] = Math.floor(d[i]/step)*step;     // r
-    d[i+1] = Math.floor(d[i+1]/step)*step; // g
-    d[i+2] = Math.floor(d[i+2]/step)*step; // b
+  function rotate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(Math.PI/2);
+    ctx.drawImage(img, -img.width/4, -img.height/4, img.width/2, img.height/2);
+    ctx.restore();
   }
-  return imageData;
-}
-
-/* stylizer implementations (approximate, visually pleasing) */
-function animeStylize(oc, off){
-  // increase saturation & contrast, slight smooth blur, gentle posterize + vignette
-  const w = off.width, h = off.height;
-  let tmp = document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx = tmp.getContext('2d');
-  tctx.filter = 'brightness(105%) contrast(110%) saturate(140%)';
-  tctx.drawImage(off,0,0);
-  // slight gaussian blur approximation using canvas filter
-  const blurCanvas = document.createElement('canvas'); blurCanvas.width=w; blurCanvas.height=h; const bctx = blurCanvas.getContext('2d');
-  bctx.filter = 'blur(1.5px)';
-  bctx.drawImage(tmp,0,0);
-  // posterize
-  const id = bctx.getImageData(0,0,w,h);
-  posterizeImageData(id, 14);
-  bctx.putImageData(id,0,0);
-  // draw to main canvas scaled to fit
-  fitCanvasToImage(baseImage); // base dims
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(blurCanvas, 0, 0, canvas.width, canvas.height);
-  // rim light (subtle)
-  ctx.globalCompositeOperation = 'screen';
-  const grad = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-  grad.addColorStop(0, 'rgba(255,220,240,0.06)');
-  grad.addColorStop(1, 'rgba(120,80,250,0.04)');
-  ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.globalCompositeOperation = 'source-over';
-  pushUndo();
-}
-
-function cartoonStylize(oc, off){
-  const w=off.width,h=off.height;
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d');
-  tctx.filter='brightness(105%) contrast(115%) saturate(130%)';
-  tctx.drawImage(off,0,0);
-  // strong posterize
-  const id = tctx.getImageData(0,0,w,h);
-  posterizeImageData(id, 10);
-  // add edge boost by blending a sobel edge map
-  const edge = sobelEdge(id, w, h);
-  // draw
-  tctx.putImageData(id,0,0);
-  // overlay edges
-  tctx.globalCompositeOperation = 'multiply';
-  const eimg = new Image(); eimg.src = edge;
-  eimg.onload = ()=>{
-    tctx.drawImage(eimg,0,0);
-    fitCanvasToImage(baseImage);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
-    ctx.globalCompositeOperation='source-over';
-    pushUndo();
-  };
-}
-
-function comicStylize(oc, off){
-  const w=off.width,h=off.height;
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d');
-  tctx.filter='contrast(120%) saturate(110%)';
-  tctx.drawImage(off,0,0);
-  // convert to grayscale and add halftone dots overlay
-  const id = tctx.getImageData(0,0,w,h);
-  // find edges for inking
-  const edgeData = getSobelImageData(id, w, h);
-  tctx.putImageData(edgeData,0,0);
-  // apply halftone by drawing dots
-  createHalftoneOverlay(w,h).then(overlay=>{
-    tctx.globalCompositeOperation='multiply';
-    tctx.drawImage(overlay,0,0);
-    tctx.globalCompositeOperation='source-over';
-    fitCanvasToImage(baseImage);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
-    pushUndo();
-  });
-}
-
-function clayStylize(oc, off){
-  const w=off.width,h=off.height;
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d');
-  tctx.filter='brightness(105%) contrast(105%) saturate(110%)';
-  tctx.drawImage(off,0,0);
-  // slight blur + soften edges
-  const soft = document.createElement('canvas'); soft.width=w; soft.height=h; const sctx=soft.getContext('2d');
-  sctx.filter='blur(2px)';
-  sctx.drawImage(tmp,0,0);
-  // warm tone overlay
-  sctx.globalCompositeOperation='overlay';
-  sctx.fillStyle='rgba(255,200,160,0.06)';
-  sctx.fillRect(0,0,w,h);
-  fitCanvasToImage(baseImage);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(soft,0,0,canvas.width,canvas.height);
-  pushUndo();
-}
-
-function lowpolyStylize(oc, off){
-  // pixelate + triangular mosaic approximation
-  const w=off.width,h=off.height;
-  const block = 20; // coarse look
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d');
-  tctx.drawImage(off,0,0);
-  // pixelate
-  const small = document.createElement('canvas'); small.width=Math.ceil(w/block); small.height=Math.ceil(h/block);
-  const sctx=small.getContext('2d');
-  sctx.imageSmoothingEnabled = false;
-  sctx.drawImage(tmp,0,0,small.width,small.height);
-  // upscale with nearest neighbor to get blocky pixels
-  tctx.imageSmoothingEnabled = false;
-  tctx.clearRect(0,0,w,h);
-  tctx.drawImage(small,0,0,w,h);
-  // subtle posterize
-  const id = tctx.getImageData(0,0,w,h);
-  posterizeImageData(id, 8);
-  tctx.putImageData(id,0,0);
-  fitCanvasToImage(baseImage);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
-  pushUndo();
-}
-
-function cgiStylize(oc, off){
-  // simulate studio lighting: increase detail + subtle bloom
-  const w=off.width,h=off.height;
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d');
-  tctx.filter='contrast(115%) saturate(110%)';
-  tctx.drawImage(off,0,0);
-  // sharpen by applying unsharp mask (simple)
-  const imgd = tctx.getImageData(0,0,w,h);
-  const sharpened = unsharpMask(imgd, w, h);
-  tctx.putImageData(sharpened,0,0);
-  // soft bloom
-  const bloom = document.createElement('canvas'); bloom.width=w; bloom.height=h; const bctx=bloom.getContext('2d');
-  bctx.filter='blur(2.4px) brightness(105%)';
-  bctx.drawImage(tctx.canvas,0,0);
-  bctx.globalCompositeOperation='screen';
-  bctx.drawImage(tctx.canvas,0,0);
-  fitCanvasToImage(baseImage);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(bloom,0,0,canvas.width,canvas.height);
-  pushUndo();
-}
-
-function mangaStylize(oc, off){
-  const w=off.width,h=off.height;
-  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d');
-  tctx.drawImage(off,0,0);
-  const id = tctx.getImageData(0,0,w,h);
-  // convert to grayscale and increase contrast
-  for(let i=0;i<id.data.length;i+=4){
-    const r=id.data[i], g=id.data[i+1], b=id.data[i+2];
-    const l = 0.299*r + 0.587*g + 0.114*b;
-    id.data[i]=id.data[i+1]=id.data[i+2] = l>128?255:0; // binary threshold for bold lines
+  function flip() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.restore();
   }
-  tctx.putImageData(id,0,0);
-  // overlay screentone halftone
-  createHalftoneOverlay(w,h,3).then(overlay=>{
-    tctx.globalCompositeOperation='multiply';
-    tctx.drawImage(overlay,0,0);
-    tctx.globalCompositeOperation='source-over';
-    fitCanvasToImage(baseImage);
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
-    pushUndo();
-  });
-}
-
-/* ---------- image helper functions ---------- */
-
-// simple sobel edge detection -> returns base64 PNG data URL for overlay
-function sobelEdge(imgData, w, h){
-  // compute grayscale
-  const g = new Uint8ClampedArray(w*h);
-  for(let y=0;y<h;y++){
-    for(let x=0;x<w;x++){
-      const i=(y*w + x)*4;
-      const r=imgData.data[i], g2=imgData.data[i+1], b=imgData.data[i+2];
-      g[y*w + x] = 0.299*r + 0.587*g2 + 0.114*b;
-    }
+  function adjust(type) {
+    alert(type + " adjustment (can be upgraded with real filters).");
   }
-  const out = document.createElement('canvas'); out.width=w; out.height=h; const octx = out.getContext('2d');
-  const outImg = octx.createImageData(w,h);
-  // simple sobel kernels
-  const gx=[-1,0,1,-2,0,2,-1,0,1];
-  const gy=[-1,-2,-1,0,0,0,1,2,1];
-  for(let y=1;y<h-1;y++){
-    for(let x=1;x<w-1;x++){
-      let sumx=0,sumy=0;
-      let k=0;
-      for(let ky=-1;ky<=1;ky++){
-        for(let kx=-1;kx<=1;kx++){
-          const val = g[(y+ky)*w + (x+kx)];
-          sumx += gx[k]*val; sumy += gy[k]*val; k++;
-        }
-      }
-      const mag = Math.min(255, Math.sqrt(sumx*sumx + sumy*sumy));
-      const idx = (y*w + x)*4;
-      outImg.data[idx]=outImg.data[idx+1]=outImg.data[idx+2]=255 - mag; // inverted for light edges
-      outImg.data[idx+3]=255;
-    }
+  function downloadImage() {
+    const link = document.createElement('a');
+    link.download = 'edited.png';
+    link.href = canvas.toDataURL();
+    link.click();
   }
-  octx.putImageData(outImg,0,0);
-  return out.toDataURL('image/png');
-}
-
-function getSobelImageData(id, w, h){
-  // returns a new ImageData with bold black edges on white
-  const data = id.data;
-  const gray = new Float32Array(w*h);
-  for(let i=0;i<w*h;i++){
-    gray[i] = 0.299*data[i*4] + 0.587*data[i*4+1] + 0.114*data[i*4+2];
+  function showTab(tab) {
+    document.getElementById('free').style.display = tab === 'free' ? 'flex' : 'none';
+    document.getElementById('vip').style.display = tab === 'vip' ? 'flex' : 'none';
+    document.getElementById('vvip').style.display = tab === 'vvip' ? 'flex' : 'none';
+    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
   }
-  const out = new ImageData(w,h);
-  for(let y=1;y<h-1;y++){
-    for(let x=1;x<w-1;x++){
-      let sx=0, sy=0;
-      for(let ky=-1;ky<=1;ky++){
-        for(let kx=-1;kx<=1;kx++){
-          const val = gray[(y+ky)*w + (x+kx)];
-          const k = (ky+1)*3 + (kx+1);
-          const gx=[-1,0,1,-2,0,2,-1,0,1];
-          const gy=[-1,-2,-1,0,0,0,1,2,1];
-          sx += gx[k]*val; sy += gy[k]*val;
-        }
-      }
-      const mag = Math.sqrt(sx*sx + sy*sy);
-      const t = mag>80?0:255; // binary
-      const i = (y*w + x)*4;
-      out.data[i]=out.data[i+1]=out.data[i+2]=t;
-      out.data[i+3]=255;
-    }
+  function openModal(msg) {
+    document.getElementById('modal-text').innerText = msg;
+    document.getElementById('modal').style.display = 'flex';
   }
-  return out;
-}
-
-function createHalftoneOverlay(w,h,scale=4){
-  return new Promise(res=>{
-    const c = document.createElement('canvas'); c.width=w; c.height=h; const cc = c.getContext('2d');
-    cc.fillStyle='#fff'; cc.fillRect(0,0,w,h);
-    cc.fillStyle='rgba(0,0,0,0.06)';
-    const step = scale*4;
-    for(let y=0;y<h;y+=step){
-      for(let x=0;x<w;x+=step){
-        const r = Math.random()*2*scale + scale;
-        cc.beginPath();
-        cc.arc(x + (Math.random()*step/3), y + (Math.random()*step/3), r, 0, Math.PI*2);
-        cc.fill();
-      }
-    }
-    res(c);
-  });
-}
-
-/* unsharp mask for CGI */
-function unsharpMask(imgd, w, h){
-  // simple kernel-based sharpen
-  const src = imgd.data; const dst = new Uint8ClampedArray(src.length);
-  const kernel = [0,-1,0,-1,5,-1,0,-1,0]; // sharpen
-  for(let y=1;y<h-1;y++){
-    for(let x=1;x<w-1;x++){
-      let r=0,g=0,b=0,k=0;
-      for(let ky=-1;ky<=1;ky++){
-        for(let kx=-1;kx<=1;kx++){
-          const idx = ((y+ky)*w + (x+kx))*4;
-          const kval = kernel[k++];
-          r += src[idx]*kval; g += src[idx+1]*kval; b += src[idx+2]*kval;
-        }
-      }
-      const i = (y*w + x)*4;
-      dst[i]=Math.min(255,Math.max(0,r));
-      dst[i+1]=Math.min(255,Math.max(0,g));
-      dst[i+2]=Math.min(255,Math.max(0,b));
-      dst[i+3]=255;
-    }
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
   }
-  const out = new ImageData(w,h);
-  out.data.set(dst);
-  return out;
-}
-
-/* ---------- event: style click => local preview or server ---------- */
-document.getElementById('btn-generate').addEventListener('click', async ()=>{
-  // If you have a backend API, replace call here with server call.
-  // The app supports a server endpoint /api/stylize that accepts { image:dataURL, style: id }
-  if(!baseImage) return alert('Upload a photo first.');
-  // Try server first — but if not reachable, use local approx
-  try {
-    setModalBusy('Sending to server for pro AI stylize (if configured)...');
-    const result = await callServerStylizeIfAvailable(selectedStyle);
-    if(result){
-      // accepted server result (url or dataURL)
-      const img = new Image();
-      img.onload = ()=>{ baseImage = img; applyImageToCanvas(img); closeModal(); };
-      img.onerror = ()=>{ throw new Error('Failed to load server image'); };
-      img.src = result;
-      return;
-    }
-    // fallback to local stylize:
-    closeModal(); // close busy
-    setModalBusy('Applying high-quality local preview — this is an immediate visualizer.');
-    setTimeout(()=>{ // small delay for UX
-      applyStyleLocally(selectedStyle);
-      closeModal();
-    }, 250);
-  } catch(err){
-    closeModal();
-    alert('Stylize failed: '+err.message);
-    console.error(err);
-  }
-});
-
-/* server hook (non-blocking): check if /api/stylize exists and call it
-   returns dataURL or URL string on success, or null if not available.
-*/
-async function callServerStylizeIfAvailable(styleId){
-  try{
-    const serverUrl = '/api/stylize'; // your server path (same origin) — secure place for API token
-    // quick health check
-    const ping = await fetch(serverUrl, { method:'OPTIONS' }).catch(()=>null);
-    // if OPTIONS not allowed, direct POST try
-    const payload = { image: canvas.toDataURL('image/jpeg',0.92), style: styleId };
-    const resp = await fetch(serverUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }).catch(()=>null);
-    if(!resp || !resp.ok) return null;
-    const json = await resp.json();
-    if(json && json.image) return json.image;
-    if(json && json.url) return json.url;
-    return null;
-  }catch(e){
-    console.log('Server stylize unavailable', e);
-    return null;
-  }
-}
-
-/* ---------- helpers: UI modal ---------- */
-function setModalBusy(text){
-  const m = document.getElementById('modal');
-  m.innerHTML = `<div class="modal"><div class="modal-card"><div style="display:flex;align-items:center;gap:12px;justify-content:center"><div class="spinner" style="width:26px;height:26px;border-width:3px"></div><div>${text}</div></div></div></div>`;
-  m.style.display = 'block';
-}
-function closeModal(){ document.getElementById('modal').style.display='none'; }
-
-/* show help */
-document.getElementById('helpBtn').addEventListener('click', ()=>{
-  const m = document.getElementById('modal');
-  m.innerHTML = `<div class="modal"><div class="modal-card">
-    <h3>How Sefakor Anime Lab works</h3>
-    <div style="text-align:left;color:var(--muted);line-height:1.5">
-      <p><strong>1.</strong> Upload a photo (front-facing works best).</p>
-      <p><strong>2.</strong> Tap a style to preview. The app applies a high-quality local stylization for instant feedback.</p>
-      <p><strong>3.</strong> Press <em>Generate (AI)</em> to call your server-side AI (optional). If not configured, the local preview is used.</p>
-      <p><strong>4.</strong> Edit with brightness/contrast/crop and download the result.</p>
-    </div>
-    <button class="modal-close" onclick="closeModal()">Close</button>
-  </div></div>`;
-  m.style.display='block';
-});
-
-/* VIP & VVIP behavior */
-document.getElementById('vipBtn').addEventListener('click', ()=> showPremiumModal('VIP', 'Golden-grade composites and priority AI queue — launching soon.'));
-document.getElementById('vvipBtn').addEventListener('click', ()=> showPremiumModal('VVIP', 'Exclusive studio renders, early access, and concierge service.'));
-document.getElementById('tab-free').addEventListener('click', ()=>{ showTab('free'); });
-document.getElementById('tab-vip').addEventListener('click', ()=>{ showTab('vip'); });
-document.getElementById('tab-vvip').addEventListener('click', ()=>{ showTab('vvip'); });
-
-function showPremiumModal(title, text){
-  const m = document.getElementById('modal');
-  m.innerHTML = `<div class="modal"><div class="modal-card"><h3>${title} • Coming soon</h3><div style="color:var(--muted);margin-top:8px">${text}</div><button class="modal-close" onclick="closeModal()">OK</button></div></div>`;
-  m.style.display='block';
-}
-function showTab(t){
-  document.getElementById('tab-free').classList.remove('active'); document.getElementById('tab-vip').classList.remove('active'); document.getElementById('tab-vvip').classList.remove('active');
-  document.getElementById('freeSection').style.display='none'; document.getElementById('vipSection').style.display='none'; document.getElementById('vvipSection').style.display='none';
-  if(t==='free'){ document.getElementById('tab-free').classList.add('active'); document.getElementById('freeSection').style.display='block'; }
-  if(t==='vip'){ document.getElementById('tab-vip').classList.add('active'); document.getElementById('vipSection').style.display='block'; }
-  if(t==='vvip'){ document.getElementById('tab-vvip').classList.add('active'); document.getElementById('vvipSection').style.display='block'; }
-}
-
-/* ---------- simple SVG thumbnails ---------- */
-function svgThumbnail(styleId){
-  switch(styleId){
-    case 'anime':
-      return `<svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect rx="8" width="64" height="64" fill="white" fill-opacity="0.06"/><path d="M18 42c4-6 14-6 18 0" stroke="white" stroke-opacity="0.9" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="28" r="4" fill="white"/><circle cx="40" cy="28" r="4" fill="white"/></svg>`;
-    case 'cartoon':
-      return `<svg width="56" height="56" viewBox="0 0 64 64"><rect rx="8" width="64" height="64" fill="white" fill-opacity="0.06"/><circle cx="32" cy="24" r="10" fill="white" opacity="0.95"/><rect x="18" y="36" width="28" height="12" rx="6" fill="#0b0f14" opacity="0.85"/></svg>`;
-    case 'comic':
-      return `<svg width="56" height="56" viewBox="0 0 64 64"><rect rx="8" width="64" height="64" fill="white" fill-opacity="0.04"/><path d="M14 18h36v28H14z" fill="white" opacity="0.96"/><path d="M20 26h8M36 26h8" stroke="#0b0f14" stroke-width="2" stroke-linecap="round"/></svg>`;
-    case 'clay':
-      return `<svg width="56" height="56" viewBox="0 0 64 64"><rect rx="8" width="64" height="64" fill="white" fill-opacity="0.04"/><ellipse cx="32" cy="28" rx="12" ry="10" fill="white"/><rect x="22" y="36" width="20" height="8" rx="4" fill="#0b0f14" opacity="0.8"/></svg>`;
-    case 'lowpoly':
-      return `<svg width="56" height="56" viewBox="0 0 64 64"><rect rx="8" width="64" height="64" fill="white" fill-opacity="0.04"/><polygon points="10,50 32,8 54,50" fill="white" opacity="0.95"/><polygon points="20,44 32,12 44,44" fill="#0b0f14" opacity="0.12"/></svg>`;
-    case 'cgi':
-      return `<svg width="56" height="56" viewBox="0 0 64 64"><rect rx="8" width="64" height="64" fill="white" fill-opacity="0.06"/><circle cx="24" cy="26" r="6" fill="white"/><circle cx="40" cy="26" r="6" fill="white"/><rect x="18" y="36" width="28" height="10" rx="5" fill="white" opacity="0.9"/></svg>`;
-    case 'manga':
-      return `<svg width="56" height="56" viewBox="0 0 64 64"><rect rx="8" width="64" height="64" fill="white" fill-opacity="0.02"/><rect x="12" y="12" width="40" height="40" fill="white"/><path d="M16 20 L48 44" stroke="#0b0f14" stroke-width="3"/></svg>`;
-    default:
-      return `<div style="width:56px;height:56px;background:#fff2;border-radius:8px"></div>`;
-  }
-}
-
-/* small startup: set a subtle default canvas background */
-ctx.fillStyle = '#07101a'; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-/* done */
 </script>
 </body>
 </html>
