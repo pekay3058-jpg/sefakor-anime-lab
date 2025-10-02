@@ -1,230 +1,535 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sefakor Anime Lab</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sefakor Anime Lab — Pro Photo Editor</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #121212;
-    color: #eee;
-    margin: 0;
-    padding: 0;
-    text-align: center;
+  /* -------------------------
+     Theme & Layout (Dark + Neon)
+     Single-file professional UI
+     ------------------------- */
+  :root{
+    --bg-1:#051018; --bg-2:#0c1220;
+    --panel:#0f1724; --muted:#94a3b8;
+    --glass: rgba(255,255,255,0.03);
+    --card-border: rgba(255,255,255,0.04);
+    --radius:12px;
+    --accent-a: linear-gradient(135deg,#7c3aed,#00d4ff);
   }
-  header {
-    background: linear-gradient(90deg, #6a11cb, #2575fc);
-    padding: 15px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: white;
-    text-shadow: 0 0 8px #000;
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:#e6eef7}
+  .app{max-width:1200px;margin:28px auto;padding:18px}
+  .header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#00d4ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:#021028;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+  .title{font-size:20px;font-weight:800}
+  .subtitle{color:var(--muted);font-size:13px}
+
+  .main{margin-top:18px;display:grid;grid-template-columns:340px 1fr;gap:18px}
+  @media (max-width:980px){.main{grid-template-columns:1fr}}
+
+  /* Sidebar */
+  .sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:14px;border-radius:var(--radius);border:1px solid var(--card-border);box-shadow:0 12px 40px rgba(2,6,23,0.6)}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tab{padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700;color:var(--muted);border:1px solid transparent;background:transparent}
+  .tab.active{background:linear-gradient(90deg, rgba(124,58,237,0.12), rgba(0,212,255,0.06));color:#fff;border:1px solid rgba(124,58,237,0.12)}
+  .section-title{font-weight:800;margin-bottom:8px}
+
+  /* Style buttons (neon) */
+  .styles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .style-btn{
+    display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;cursor:pointer;border:1px solid rgba(255,255,255,0.03); transition:all .18s;box-shadow:0 6px 18px rgba(2,6,23,0.6);
   }
-  nav {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    background: #1e1e1e;
-    padding: 10px;
-  }
-  nav button {
-    background: #2c2c2c;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #fff;
-    font-weight: bold;
-    transition: 0.3s;
-  }
-  nav button:hover { background: #444; }
-  .active { background: #2575fc; }
-  #editor {
-    padding: 20px;
-  }
-  #upload {
-    margin: 15px 0;
-  }
-  canvas {
-    border: 2px solid #444;
-    border-radius: 10px;
-    margin: 20px auto;
-    display: block;
-    background: #222;
-    max-width: 90%;
-  }
-  .tools, .styles {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin: 20px 0;
-  }
-  .btn {
-    padding: 12px 18px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    color: white;
-    box-shadow: 0 0 12px rgba(0,0,0,0.4);
-    transition: 0.3s;
-  }
-  .btn:hover { transform: scale(1.05); }
-  .anime { background: linear-gradient(45deg, #ff416c, #ff4b2b); }
-  .cartoon { background: linear-gradient(45deg, #ff9800, #ffc107); }
-  .comic { background: linear-gradient(45deg, #00c6ff, #0072ff); }
-  .clay { background: linear-gradient(45deg, #8e2de2, #4a00e0); }
-  .lowpoly { background: linear-gradient(45deg, #06beb6, #48b1bf); }
-  .cgi { background: linear-gradient(45deg, #11998e, #38ef7d); }
-  .manga { background: linear-gradient(45deg, #fc466b, #3f5efb); }
-  .vip { background: linear-gradient(45deg, gold, darkorange); }
-  .vvip { background: linear-gradient(45deg, #e0e0e0, #9e9e9e); color: black; }
-  /* Modal popup */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
-    justify-content: center;
-    align-items: center;
-  }
-  .modal-content {
-    background: #222;
-    padding: 25px;
-    border-radius: 12px;
-    text-align: center;
-    max-width: 300px;
-    color: white;
-    box-shadow: 0 0 20px #000;
-  }
-  .modal-content h2 { margin: 0 0 15px; }
-  .close {
-    background: crimson;
-    border: none;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
+  .style-btn:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(2,6,23,0.7)}
+  .style-icon{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#071127}
+  .style-meta{flex:1}
+  .style-name{font-weight:800}
+  .style-desc{font-size:12px;color:var(--muted);margin-top:4px}
+
+  /* colors for each style */
+  .c-anime{background:linear-gradient(135deg,#ffd6f7,#a78bfa)}
+  .c-cartoon{background:linear-gradient(135deg,#ffddc7,#ff8a65)}
+  .c-comic{background:linear-gradient(135deg,#fff6c2,#ffb86b)}
+  .c-clay{background:linear-gradient(135deg,#ffe1c7,#f59e0b)}
+  .c-lowpoly{background:linear-gradient(135deg,#cde6ff,#60a5fa)}
+  .c-cgi{background:linear-gradient(135deg,#d3f8ff,#00d4ff)}
+  .c-manga{background:linear-gradient(135deg,#f1f5f9,#94a3b8)}
+
+  /* premium buttons */
+  .premium{display:flex;gap:10px;margin-top:12px}
+  .vip{flex:1;padding:10px;border-radius:10px;background:linear-gradient(90deg,#ffd36b,#ff8a00);color:#111;font-weight:800;cursor:pointer;box-shadow:0 14px 36px rgba(255,138,0,0.12)}
+  .vvip{flex:1;padding:10px;border-radius:10px;background:linear-gradient(90deg,#9be6ff,#7c3aed);color:#071127;font-weight:800;cursor:pointer;box-shadow:0 14px 36px rgba(124,58,237,0.12)}
+
+  /* Editor */
+  .editor{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:14px;border-radius:var(--radius);border:1px solid var(--card-border);box-shadow:0 12px 40px rgba(2,6,23,0.6)}
+  .canvas-wrap{display:flex;gap:14px;align-items:flex-start;flex-direction:column}
+  .canvas-top{display:flex;justify-content:space-between;align-items:center}
+  canvas{display:block;border-radius:10px;background:#07101a;max-width:100%;width:100%;height:auto;box-shadow:0 18px 40px rgba(2,6,23,0.6)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .tool{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted);cursor:pointer;font-weight:700}
+  .tool.primary{background:var(--accent-a);color:#021028;border:none;box-shadow:0 12px 30px rgba(124,58,237,0.12)}
+  .range{display:flex;gap:10px;align-items:center}
+  .range input[type=range]{width:160px}
+
+  .note{color:var(--muted);font-size:13px;margin-top:10px}
+  .modal{position:fixed;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:60}
+  .modal-card{background:linear-gradient(180deg,#071022,#0b1320);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);max-width:480px;color:#fff}
+  .modal-close{margin-top:12px;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--muted);cursor:pointer}
+  .spinner{display:inline-block;border:3px solid rgba(255,255,255,0.08);border-top:3px solid #fff;border-radius:50%;width:18px;height:18px;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<header>✨ Sefakor Anime Lab ✨</header>
+  <div class="app">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">SA</div>
+        <div>
+          <div class="title">Sefakor Anime Lab</div>
+          <div class="subtitle">Pro 3D-stylized photo editor • Free styles • VIP/VVIP coming soon</div>
+        </div>
+      </div>
+      <div>
+        <button id="help" class="tool">How it works</button>
+      </div>
+    </div>
 
-<nav>
-  <button id="tab-free" class="active" onclick="showTab('free')">FREE</button>
-  <button id="tab-vip" onclick="showTab('vip')">VIP</button>
-  <button id="tab-vvip" onclick="showTab('vvip')">VVIP</button>
-</nav>
+    <div class="main">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="tabs">
+          <button id="tabFree" class="tab active">FREE</button>
+          <button id="tabVip" class="tab">VIP</button>
+          <button id="tabVvip" class="tab">VVIP</button>
+        </div>
 
-<div id="editor">
-  <!-- Upload -->
-  <input type="file" id="upload" accept="image/*"><br>
-  <canvas id="canvas"></canvas>
+        <div id="freePanel">
+          <div class="section-title">Free Styles</div>
+          <div class="styles" id="stylesList">
+            <!-- injected -->
+          </div>
+        </div>
 
-  <!-- Free styles -->
-  <div id="free" class="styles">
-    <button class="btn anime" onclick="applyStyle('anime')">Anime</button>
-    <button class="btn cartoon" onclick="applyStyle('cartoon')">Cartoon</button>
-    <button class="btn comic" onclick="applyStyle('comic')">Comic</button>
-    <button class="btn clay" onclick="applyStyle('clay')">Clay</button>
-    <button class="btn lowpoly" onclick="applyStyle('lowpoly')">Low Poly</button>
-    <button class="btn cgi" onclick="applyStyle('cgi')">CGI</button>
-    <button class="btn manga" onclick="applyStyle('manga')">Manga</button>
+        <div id="vipPanel" style="display:none">
+          <div class="section-title">VIP</div>
+          <div style="padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))">
+            <strong style="color:#ffd36b">VIP</strong> coming soon — premium composites, hero companions, & priority.
+          </div>
+        </div>
+
+        <div id="vvipPanel" style="display:none">
+          <div class="section-title">VVIP</div>
+          <div style="padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))">
+            <strong style="color:#9be6ff">VVIP</strong> coming soon — studio renders, batch imports, concierge.
+          </div>
+        </div>
+
+        <div class="premium">
+          <button id="btnVip" class="vip">VIP</button>
+          <button id="btnVvip" class="vvip">VVIP</button>
+        </div>
+
+        <div class="note">Tap a style to preview. Use <em>Generate (AI)</em> to call your server when configured.</div>
+      </div>
+
+      <!-- EDITOR -->
+      <div class="editor">
+        <div class="canvas-top">
+          <div style="font-weight:800">Editor</div>
+          <div style="color:var(--muted);font-size:13px">Local previews • Add server AI later</div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="canvas-wrap">
+          <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;">
+            <div>
+              <label class="tool" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer">
+                Upload
+                <input id="file" type="file" accept="image/*" style="display:none"/>
+              </label>
+              <button id="btnCrop" class="tool">Crop</button>
+              <button id="btnRotate" class="tool">Rotate</button>
+              <button id="btnFlip" class="tool">Flip</button>
+            </div>
+            <div>
+              <button id="btnGenerate" class="tool primary">Generate (AI)</button>
+              <button id="btnReset" class="tool">Reset</button>
+            </div>
+          </div>
+
+          <canvas id="canvas" width="960" height="600"></canvas>
+
+          <div class="toolbar">
+            <div class="range">
+              <div style="width:84px;color:var(--muted);font-size:13px">Brightness</div>
+              <input id="brightness" type="range" min="60" max="140" value="100"/>
+            </div>
+            <div class="range">
+              <div style="width:84px;color:var(--muted);font-size:13px">Contrast</div>
+              <input id="contrast" type="range" min="60" max="140" value="100"/>
+            </div>
+            <div class="range">
+              <div style="width:84px;color:var(--muted);font-size:13px">Saturation</div>
+              <input id="saturation" type="range" min="60" max="160" value="100"/>
+            </div>
+
+            <div style="flex:1"></div>
+            <button id="btnUndo" class="tool">Undo</button>
+            <button id="btnRedo" class="tool">Redo</button>
+            <button id="btnDownload" class="tool">Download</button>
+          </div>
+
+          <div class="note">Pro tip: Use <strong>Generate (AI)</strong> after you configure your server to produce the final render.</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- VIP -->
-  <div id="vip" class="styles" style="display:none;">
-    <button class="btn vip" onclick="openModal('VIP 🚀 Features Coming Soon!')">VIP Access</button>
-  </div>
-
-  <!-- VVIP -->
-  <div id="vvip" class="styles" style="display:none;">
-    <button class="btn vvip" onclick="openModal('🌌 VVIP Exclusive Features Coming Soon!')">VVIP Access</button>
-  </div>
-
-  <!-- Editor tools -->
-  <div class="tools">
-    <button class="btn" style="background:#555;" onclick="rotate()">Rotate</button>
-    <button class="btn" style="background:#777;" onclick="flip()">Flip</button>
-    <button class="btn" style="background:#999;" onclick="adjust('bright')">Brightness</button>
-    <button class="btn" style="background:#bbb;color:#000;" onclick="adjust('contrast')">Contrast</button>
-    <button class="btn" style="background:#2575fc;" onclick="downloadImage()">Download</button>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <h2 id="modal-text"></h2>
-    <button class="close" onclick="closeModal()">Close</button>
-  </div>
-</div>
+  <!-- modal -->
+  <div id="modal" style="display:none"></div>
 
 <script>
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  let img = new Image();
+/* ======================
+   Sefakor Anime Lab — Single-file JS
+   - 7 neon style buttons (unique colors)
+   - VIP/VVIP open stylish "coming soon" modals
+   - Editor tools: upload, crop (center square), rotate, flip, brightness/contrast/sat, undo/redo, download
+   - Generate (AI) will attempt a server call to /api/stylize; if unavailable, local stylize preview runs
+   ====================== */
 
-  document.getElementById('upload').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      img.onload = () => {
-        canvas.width = img.width/2;
-        canvas.height = img.height/2;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
+const STYLES = [
+  { id:'anime', name:'Anime 3D', cls:'c-anime' },
+  { id:'cartoon', name:'Cartoon Toy', cls:'c-cartoon' },
+  { id:'comic', name:'Comic Book', cls:'c-comic' },
+  { id:'clay', name:'Clay', cls:'c-clay' },
+  { id:'lowpoly', name:'Low Poly', cls:'c-lowpoly' },
+  { id:'cgi', name:'CGI Realistic', cls:'c-cgi' },
+  { id:'manga', name:'Manga Sketch', cls:'c-manga' }
+];
+
+/* inject style buttons */
+const stylesList = document.getElementById('stylesList');
+let selectedStyle = STYLES[0].id;
+STYLES.forEach(s=>{
+  const btn = document.createElement('div');
+  btn.className = 'style-btn';
+  btn.innerHTML = `<div class="style-icon ${s.cls}" aria-hidden>${s.name.charAt(0)}</div><div class="style-meta"><div class="style-name">${s.name}</div><div class="style-desc">Preview this style</div></div>`;
+  btn.onclick = ()=>{ selectStyle(s.id, btn); };
+  stylesList.appendChild(btn);
+});
+function selectStyle(id, btn){
+  document.querySelectorAll('.style-btn').forEach(x=>x.style.boxShadow='');
+  btn.style.boxShadow = '0 18px 42px rgba(0,0,0,0.6), 0 0 20px rgba(124,58,237,0.06)';
+  selectedStyle = id;
+}
+document.querySelectorAll('.style-btn')[0].style.boxShadow='0 18px 42px rgba(0,0,0,0.6)';
+
+/* canvas & state */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { alpha:false });
+let baseImg = null, originalData = null;
+let undoStack = [], redoStack = [];
+function pushUndo(){ try{ undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height)); if(undoStack.length>25) undoStack.shift(); redoStack=[] }catch(e){} }
+function fitAndDraw(img){
+  // fit to canvas max width while preserving aspect ratio
+  const maxW = 1000;
+  let w=img.width, h=img.height;
+  if(w>maxW){ h = Math.round(h*(maxW/w)); w = maxW; }
+  canvas.width = w; canvas.height = h;
+  ctx.fillStyle = '#07101a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  originalData = ctx.getImageData(0,0,canvas.width,canvas.height);
+  pushUndo();
+}
+
+/* upload */
+document.getElementById('file').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ const im = new Image(); im.onload = ()=>{ baseImg=im; fitAndDraw(im); }; im.src = r.result; };
+  r.readAsDataURL(f);
+});
+
+/* basic tools */
+document.getElementById('btnRotate').addEventListener('click', ()=>{
+  if(!baseImg) return alert('Upload image first');
+  const temp = document.createElement('canvas'); const tctx = temp.getContext('2d');
+  temp.width = canvas.height; temp.height = canvas.width;
+  tctx.translate(temp.width/2,temp.height/2);
+  tctx.rotate(Math.PI/2);
+  tctx.drawImage(canvas, -canvas.width/2, -canvas.height/2);
+  canvas.width = temp.width; canvas.height = temp.height;
+  ctx.drawImage(temp,0,0);
+  pushUndo();
+});
+document.getElementById('btnFlip').addEventListener('click', ()=>{
+  if(!baseImg) return alert('Upload image first');
+  const temp = document.createElement('canvas'); temp.width=canvas.width; temp.height=canvas.height;
+  const t = temp.getContext('2d'); t.translate(temp.width,0); t.scale(-1,1); t.drawImage(canvas,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(temp,0,0);
+  pushUndo();
+});
+document.getElementById('btnCrop').addEventListener('click', ()=>{
+  if(!baseImg) return alert('Upload image first');
+  const size = Math.min(canvas.width, canvas.height);
+  const sx = Math.round((canvas.width - size)/2), sy = Math.round((canvas.height - size)/2);
+  const imgData = ctx.getImageData(sx, sy, size, size);
+  canvas.width = size; canvas.height = size; ctx.putImageData(imgData,0,0); pushUndo();
+});
+
+/* sliders */
+function applyFilters(){
+  if(!originalData) return;
+  // draw from original then apply CSS-like filters via temporary canvas
+  const b = document.getElementById('brightness').value;
+  const c = document.getElementById('contrast').value;
+  const s = document.getElementById('saturation').value;
+  const off = document.createElement('canvas'); off.width=originalData.width; off.height=originalData.height;
+  const octx = off.getContext('2d'); octx.putImageData(originalData,0,0);
+  const scaled = document.createElement('canvas'); scaled.width=canvas.width; scaled.height=canvas.height;
+  const sctx = scaled.getContext('2d');
+  sctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+  sctx.drawImage(off,0,0,scaled.width,scaled.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(scaled,0,0);
+}
+['brightness','contrast','saturation'].forEach(id=>document.getElementById(id).addEventListener('input', applyFilters));
+
+/* undo/redo */
+document.getElementById('btnUndo').addEventListener('click', ()=>{
+  if(!undoStack.length) return;
+  redoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+  const d = undoStack.pop(); ctx.putImageData(d,0,0);
+});
+document.getElementById('btnRedo').addEventListener('click', ()=>{
+  if(!redoStack.length) return;
+  undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+  const d = redoStack.pop(); ctx.putImageData(d,0,0);
+});
+
+/* download */
+document.getElementById('btnDownload').addEventListener('click', ()=>{
+  const a = document.createElement('a'); a.href = canvas.toDataURL('image/png',0.95); a.download = `sefakor_${selectedStyle}.png`; a.click();
+});
+
+/* local stylizers (high-quality approximations) */
+function localStylize(style){
+  if(!baseImg) return alert('Upload image first');
+  // backup originalData to restore filters later
+  const off = document.createElement('canvas'); off.width=baseImg.width; off.height=baseImg.height; const oc = off.getContext('2d'); oc.drawImage(baseImg,0,0);
+  // choose approach per style
+  switch(style){
+    case 'anime': stylizeAnime(off); break;
+    case 'cartoon': stylizeCartoon(off); break;
+    case 'comic': stylizeComic(off); break;
+    case 'clay': stylizeClay(off); break;
+    case 'lowpoly': stylizeLowpoly(off); break;
+    case 'cgi': stylizeCGI(off); break;
+    case 'manga': stylizeManga(off); break;
+    default: alert('Style not supported locally'); break;
+  }
+}
+
+function putCanvasFromOff(off){
+  // scale to canvas
+  const w = off.width, h = off.height;
+  const maxW = 1000; let dw=w, dh=h;
+  if(dw>maxW){ dh = Math.round(dh*(maxW/dw)); dw = maxW; }
+  canvas.width = dw; canvas.height = dh;
+  ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(off,0,0,canvas.width,canvas.height); pushUndo();
+}
+
+/* stylizer implementations (visual, non-ML) */
+function stylizeAnime(off){
+  const w=off.width,h=off.height;
+  const tmp = document.createElement('canvas'); tmp.width=w; tmp.height=h; const tc=tmp.getContext('2d');
+  tc.filter='brightness(105%) contrast(115%) saturate(140%)';
+  tc.drawImage(off,0,0);
+  // gentle blur + posterize
+  tc.filter='brightness(105%) contrast(115%) saturate(140%) blur(1.4px)';
+  tc.drawImage(tmp,0,0);
+  const imgd = tc.getImageData(0,0,w,h);
+  posterize(imgd,14); tc.putImageData(imgd,0,0);
+  // rim gradient overlay
+  putCanvasFromOff(tmp);
+}
+function stylizeCartoon(off){
+  const w=off.width,h=off.height;
+  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tc=tmp.getContext('2d');
+  tc.filter='brightness(105%) contrast(120%) saturate(130%)';
+  tc.drawImage(off,0,0);
+  const id = tc.getImageData(0,0,w,h); posterize(id,10); tc.putImageData(id,0,0);
+  // darken edges
+  const edge = sobelEdge(tc.getImageData(0,0,w,h), w, h);
+  const img = new Image(); img.onload = ()=>{ tc.globalCompositeOperation='multiply'; tc.drawImage(img,0,0); tc.globalCompositeOperation='source-over'; putCanvasFromOff(tmp); }; img.src = edge;
+}
+function stylizeComic(off){
+  const w=off.width,h=off.height;
+  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tc=tmp.getContext('2d');
+  tc.filter='contrast(120%) saturate(110%)';
+  tc.drawImage(off,0,0);
+  const id = tc.getImageData(0,0,w,h);
+  const edges = getSobel(id,w,h);
+  tc.putImageData(edges,0,0);
+  createHalftone(w,h).then(hc=>{ tc.globalCompositeOperation='multiply'; tc.drawImage(hc,0,0); tc.globalCompositeOperation='source-over'; putCanvasFromOff(tmp); });
+}
+function stylizeClay(off){
+  const w=off.width,h=off.height; const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tc=tmp.getContext('2d');
+  tc.filter='brightness(104%) contrast(105%) saturate(110%) blur(1.6px)';
+  tc.drawImage(off,0,0);
+  const overlay = document.createElement('canvas'); overlay.width=w; overlay.height=h; const oc=overlay.getContext('2d');
+  oc.fillStyle='rgba(255,200,160,0.04)'; oc.fillRect(0,0,w,h); tc.globalCompositeOperation='overlay'; tc.drawImage(overlay,0,0); tc.globalCompositeOperation='source-over';
+  putCanvasFromOff(tmp);
+}
+function stylizeLowpoly(off){
+  const w=off.width,h=off.height; const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tc=tmp.getContext('2d');
+  const block=18;
+  const small=document.createElement('canvas'); small.width=Math.ceil(w/block); small.height=Math.ceil(h/block); const sc=small.getContext('2d'); sc.imageSmoothingEnabled=false; sc.drawImage(off,0,0,small.width,small.height);
+  tc.imageSmoothingEnabled=false; tc.clearRect(0,0,w,h); tc.drawImage(small,0,0,w,h);
+  const id = tc.getImageData(0,0,w,h); posterize(id,8); tc.putImageData(id,0,0);
+  putCanvasFromOff(tmp);
+}
+function stylizeCGI(off){
+  const w=off.width,h=off.height; const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tc=tmp.getContext('2d');
+  tc.filter='contrast(118%) saturate(115%)';
+  tc.drawImage(off,0,0);
+  // unsharp mask-ish
+  const id=tc.getImageData(0,0,w,h);
+  const res = unsharp(id,w,h);
+  tc.putImageData(res,0,0);
+  // bloom
+  const bloom=document.createElement('canvas'); bloom.width=w; bloom.height=h; const bc=bloom.getContext('2d');
+  bc.filter='blur(2.2px) brightness(105%)'; bc.drawImage(tc.canvas,0,0);
+  bc.globalCompositeOperation='screen'; bc.drawImage(tc.canvas,0,0);
+  putCanvasFromOff(bloom);
+}
+function stylizeManga(off){
+  const w=off.width,h=off.height; const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tc=tmp.getContext('2d');
+  tc.drawImage(off,0,0);
+  const id=tc.getImageData(0,0,w,h);
+  for(let i=0;i<id.data.length;i+=4){
+    const r=id.data[i],g=id.data[i+1],b=id.data[i+2];
+    const l = 0.299*r + 0.587*g + 0.114*b;
+    const v = l>128?255:0;
+    id.data[i]=id.data[i+1]=id.data[i+2]=v;
+  }
+  tc.putImageData(id,0,0);
+  createHalftone(w,h,3).then(hc=>{ tc.globalCompositeOperation='multiply'; tc.drawImage(hc,0,0); tc.globalCompositeOperation='source-over'; putCanvasFromOff(tmp); });
+}
+
+/* helper funcs used above */
+function posterize(imageData, levels){
+  const d=imageData.data, step=256/levels;
+  for(let i=0;i<d.length;i+=4){ d[i]=Math.floor(d[i]/step)*step; d[i+1]=Math.floor(d[i+1]/step)*step; d[i+2]=Math.floor(d[i+2]/step)*step; }
+}
+function sobelEdge(imgData, w, h){
+  const g = new Uint8ClampedArray(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const i=(y*w+x)*4; g[y*w+x] = 0.299*imgData.data[i] + 0.587*imgData.data[i+1] + 0.114*imgData.data[i+2];
+  }
+  const outC = document.createElement('canvas'); outC.width=w; outC.height=h; const out = outC.getContext('2d'); const outImg = out.createImageData(w,h);
+  const gx=[-1,0,1,-2,0,2,-1,0,1], gy=[-1,-2,-1,0,0,0,1,2,1];
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    let sumx=0,sumy=0,k=0;
+    for(let ky=-1;ky<=1;ky++) for(let kx=-1;kx<=1;kx++){ const val=g[(y+ky)*w + (x+kx)]; sumx+=gx[k]*val; sumy+=gy[k]*val; k++; }
+    const mag = Math.min(255,Math.sqrt(sumx*sumx+sumy*sumy));
+    const idx=(y*w+x)*4; outImg.data[idx]=outImg.data[idx+1]=outImg.data[idx+2]=255-mag; outImg.data[idx+3]=255;
+  }
+  out.putImageData(outImg,0,0); return outC.toDataURL('image/png');
+}
+function getSobel(id,w,h){
+  // return ImageData with edges for comic inking (simple)
+  const gray = new Float32Array(w*h);
+  for(let i=0;i<w*h;i++) gray[i]=0.299*id.data[i*4]+0.587*id.data[i*4+1]+0.114*id.data[i*4+2];
+  const out = new ImageData(w,h);
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    let sx=0,sy=0;
+    for(let ky=-1;ky<=1;ky++) for(let kx=-1;kx<=1;kx++){
+      const val = gray[(y+ky)*w + (x+kx)];
+      const k=(ky+1)*3 + (kx+1);
+      const gx=[-1,0,1,-2,0,2,-1,0,1], gy=[-1,-2,-1,0,0,0,1,2,1];
+      sx += gx[k]*val; sy += gy[k]*val;
+    }
+    const m = Math.sqrt(sx*sx+sy*sy);
+    const v = m>80?0:255;
+    const i=(y*w+x)*4; out.data[i]=out.data[i+1]=out.data[i+2]=v; out.data[i+3]=255;
+  }
+  return out;
+}
+function createHalftone(w,h,scale=4){
+  return new Promise(res=>{
+    const c=document.createElement('canvas'); c.width=w; c.height=h; const cc=c.getContext('2d');
+    cc.fillStyle='#fff'; cc.fillRect(0,0,w,h); cc.fillStyle='rgba(0,0,0,0.06)';
+    const step = scale*4;
+    for(let y=0;y<h;y+=step) for(let x=0;x<w;x+=step){ const r = Math.random()*2*scale + scale; cc.beginPath(); cc.arc(x + (Math.random()*step/3), y + (Math.random()*step/3), r, 0, Math.PI*2); cc.fill(); }
+    res(c);
   });
+}
+function unsharp(imgd,w,h){
+  const src=imgd.data; const dst=new Uint8ClampedArray(src.length);
+  const k=[0,-1,0,-1,5,-1,0,-1,0];
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    let r=0,g=0,b=0,kidx=0;
+    for(let ky=-1;ky<=1;ky++) for(let kx=-1;kx<=1;kx++){
+      const idx=((y+ky)*w + (x+kx))*4; const kval=k[kidx++]; r+=src[idx]*kval; g+=src[idx+1]*kval; b+=src[idx+2]*kval;
+    }
+    const i=(y*w+x)*4; dst[i]=Math.min(255,Math.max(0,r)); dst[i+1]=Math.min(255,Math.max(0,g)); dst[i+2]=Math.min(255,Math.max(0,b)); dst[i+3]=255;
+  }
+  const out=new ImageData(w,h); out.data.set(dst); return out;
+}
 
-  function applyStyle(style) {
-    alert("Style applied: " + style + " (connect API here later).");
+/* server call: attempts to call /api/stylize; if fails, return null */
+async function callServerStylize(style){
+  try{
+    // POST { image: dataURL, style } -> expects { ok:true, image: "<dataURL or url>" }
+    const dataURL = canvas.toDataURL('image/jpeg',0.92);
+    const resp = await fetch('/api/stylize', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ image: dataURL, style }) });
+    if(!resp.ok) return null;
+    const json = await resp.json();
+    if(json && json.ok && json.image) return json.image;
+    if(json && json.ok && json.url) return json.url;
+    return null;
+  }catch(e){ return null; }
+}
+
+/* main generate button handler: try server, fallback to local preview */
+document.getElementById('btnGenerate').addEventListener('click', async ()=>{
+  if(!baseImg) return alert('Upload a photo first');
+  showModalBusy('Generating — calling server if configured...');
+  const serverResult = await callServerStylize(selectedStyle);
+  if(serverResult){
+    const img = new Image(); img.onload = ()=>{ baseImg = img; fitAndDraw(img); closeModal(); }; img.src = serverResult;
+    return;
   }
-  function rotate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.rotate(Math.PI/2);
-    ctx.drawImage(img, -img.width/4, -img.height/4, img.width/2, img.height/2);
-    ctx.restore();
-  }
-  function flip() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.drawImage(img, -canvas.width, 0, canvas.width, canvas.height);
-    ctx.restore();
-  }
-  function adjust(type) {
-    alert(type + " adjustment (can be upgraded with real filters).");
-  }
-  function downloadImage() {
-    const link = document.createElement('a');
-    link.download = 'edited.png';
-    link.href = canvas.toDataURL();
-    link.click();
-  }
-  function showTab(tab) {
-    document.getElementById('free').style.display = tab === 'free' ? 'flex' : 'none';
-    document.getElementById('vip').style.display = tab === 'vip' ? 'flex' : 'none';
-    document.getElementById('vvip').style.display = tab === 'vvip' ? 'flex' : 'none';
-    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-  }
-  function openModal(msg) {
-    document.getElementById('modal-text').innerText = msg;
-    document.getElementById('modal').style.display = 'flex';
-  }
-  function closeModal() {
-    document.getElementById('modal').style.display = 'none';
-  }
+  // fallback to local stylize
+  closeModal(); showModalBusy('Applying local high-quality preview...');
+  setTimeout(()=>{ localStylize(selectedStyle); closeModal(); }, 250);
+});
+
+/* modal helpers */
+function showModalBusy(text){ const m=document.getElementById('modal'); m.innerHTML=`<div class="modal"><div class="modal-card"><div style="display:flex;gap:12px;align-items:center;justify-content:center"><div class="spinner"></div><div>${text}</div></div></div></div>`; m.style.display='block'; }
+function showModal(title,html){ const m=document.getElementById('modal'); m.innerHTML=`<div class="modal"><div class="modal-card"><h3>${title}</h3><div style="color:var(--muted);margin-top:8px">${html}</div><button class="modal-close" onclick="closeModal()">OK</button></div></div>`; m.style.display='block'; }
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+
+/* VIP / VVIP modals & tab switching */
+document.getElementById('btnVip').addEventListener('click', ()=> showModal('VIP • Coming Soon', 'Premium composites, priority queue, and more — launching soon.'));
+document.getElementById('btnVvip').addEventListener('click', ()=> showModal('VVIP • Coming Soon', 'Exclusive studio renders and concierge access — launching soon.'));
+document.getElementById('tabFree').addEventListener('click', ()=>{ showTab('free'); });
+document.getElementById('tabVip').addEventListener('click', ()=>{ showTab('vip'); });
+document.getElementById('tabVvip').addEventListener('click', ()=>{ showTab('vvip'); });
+function showTab(t){
+  document.getElementById('tabFree').classList.remove('active'); document.getElementById('tabVip').classList.remove('active'); document.getElementById('tabVvip').classList.remove('active');
+  document.getElementById('freePanel').style.display='none'; document.getElementById('vipPanel').style.display='none'; document.getElementById('vvipPanel').style.display='none';
+  if(t==='free'){ document.getElementById('tabFree').classList.add('active'); document.getElementById('freePanel').style.display='block'; }
+  if(t==='vip'){ document.getElementById('tabVip').classList.add('active'); document.getElementById('vipPanel').style.display='block'; }
+  if(t==='vvip'){ document.getElementById('tabVvip').classList.add('active'); document.getElementById('vvipPanel').style.display='block'; }
+}
+
+/* help */
+document.getElementById('help').addEventListener('click', ()=> showModal('How it works', '<ol style="text-align:left;color:var(--muted)"><li>Upload a photo (front-facing recommended).</li><li>Choose a style (Free list shown). Preview uses local rendering for instant feedback.</li><li>Click Generate (AI) to call your server-side AI endpoint /api/stylize (secure place for keys).</li><li>Edit with sliders, crop, rotate, then download.</li></ol>'));
+
+/* end of script */
 </script>
 </body>
 </html>
