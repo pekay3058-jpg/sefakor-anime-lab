@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sefakor Anime Lab — Photo Editor</title>
+<style>
+  :root {
+    --bg1:#0f172a; --bg2:#0b1220; --accent:#7c3aed;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#fff}
+  .wrap{max-width:1100px;margin:28px auto;padding:20px}
+  h1{margin:0 0 8px;font-size:28px}
+  .top{display:flex;gap:16px;align-items:center;justify-content:space-between}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));border-radius:12px;padding:14px;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+  .uploader{display:flex;gap:12px;align-items:center}
+  input[type=file]{display:block}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  button{background:var(--accent);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+  button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.08)}
+  .styles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .style-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.00));padding:12px;border-radius:10px;cursor:pointer;border:1px solid rgba(255,255,255,0.03);text-align:center}
+  .style-card.selected{outline:3px solid rgba(124,58,237,0.18);box-shadow:0 8px 20px rgba(12,6,20,0.6)}
+  canvas{display:block;border-radius:10px;margin-top:16px;background:#111}
+  .sliders{display:flex;gap:12px;align-items:center;margin-top:10px}
+  .sliders label{font-size:13px;color:#cbd5e1}
+  .footer{margin-top:18px;font-size:13px;color:#94a3b8}
+  .spinner{display:inline-block;border:3px solid rgba(255,255,255,0.08);border-top:3px solid #fff;border-radius:50%;width:18px;height:18px;animation:spin .9s linear infinite}
+  @keyframes spin {to{transform:rotate(360deg)}}
+  @media (max-width:900px){.styles{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>Sefakor Anime Lab</h1>
+        <div style="color:#9aa4bd">Upload a photo → choose a style → wait for AI transform → edit & download.</div>
+      </div>
+      <div><small class="card" style="padding:8px 12px">Free styles • No VIP/VVIP shown</small></div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="uploader">
+        <div style="flex:1">
+          <input id="file" type="file" accept="image/*">
+          <div id="filename" style="margin-top:8px;color:#cbd5e1;font-size:13px"></div>
+        </div>
+
+        <div style="min-width:260px;text-align:right">
+          <div style="margin-bottom:8px">
+            <button id="btn-generate" title="Send to AI">Generate (AI)</button>
+            <button id="btn-clear" class="secondary">Clear</button>
+          </div>
+          <div style="font-size:12px;color:#9aa4bd">Choose one free style below — server will call Replicate.</div>
+        </div>
+      </div>
+
+      <div class="styles" id="styles">
+        <!-- style cards inserted by JS -->
+      </div>
+
+      <div class="sliders">
+        <label>Brightness <input id="brightness" type="range" min="50" max="150" value="100"></label>
+        <label>Contrast <input id="contrast" type="range" min="50" max="150" value="100"></label>
+        <label>Rotate<button id="rot-left" class="secondary" style="margin-left:8px">⟲</button><button id="rot-right" class="secondary">⟳</button></label>
+        <label>Flip<button id="flip-h" class="secondary" style="margin-left:8px">⇋</button><button id="flip-v" class="secondary">⇅</button></label>
+      </div>
+
+      <canvas id="canvas"></canvas>
+
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+        <button id="download">Download Image</button>
+        <div id="status" style="color:#cbd5e1;font-size:13px"></div>
+      </div>
+
+      <div class="footer">Powered by Sefakor Anime Lab • Keep your Replicate key on your server only.</div>
+    </div>
+  </div>
+
+<script>
+/*
+  Client-side single-file app.
+  - Does NOT contain API key.
+  - Expects a server endpoint at POST /api/stylize that accepts JSON:
+      { image: "<dataURL>", style: "<styleId>" }
+    and returns JSON { ok:true, image: "<dataURL or url>" } when generation finished.
+  - You will run the server code (provided separately) and set REPLICATE_API_TOKEN there.
+*/
+
+const STYLE_LIST = [
+  { id:'anime', label:'Anime 3D', promptKey:'REPLICATE_MODEL_ANIME' },
+  { id:'cartoon', label:'Cartoon Toy', promptKey:'REPLICATE_MODEL_CARTOON' },
+  { id:'comic', label:'Comic Book', promptKey:'REPLICATE_MODEL_COMIC' },
+  { id:'clay', label:'Clay/Plasticine', promptKey:'REPLICATE_MODEL_CLAY' },
+  { id:'lowpoly', label:'Low Poly', promptKey:'REPLICATE_MODEL_LOWPOLY' },
+  { id:'cgi', label:'CGI Realistic', promptKey:'REPLICATE_MODEL_REALISTIC' },
+  { id:'manga', label:'Manga/Sketch', promptKey:'REPLICATE_MODEL_MANGA' }
+];
+
+const stylesContainer = document.getElementById('styles');
+const fileInput = document.getElementById('file');
+const filenameEl = document.getElementById('filename');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const btnGenerate = document.getElementById('btn-generate');
+const btnClear = document.getElementById('btn-clear');
+const statusEl = document.getElementById('status');
+const downloadBtn = document.getElementById('download');
+
+let currentFileDataURL = null;
+let selectedStyle = STYLE_LIST[0].id;
+let imageObj = new Image();
+let transformState = { rotate:0, flipH:false, flipV:false, brightness:100, contrast:100 };
+
+function createStyleCards(){
+  STYLE_LIST.forEach(s=>{
+    const el = document.createElement('div');
+    el.className = 'style-card' + (s.id===selectedStyle ? ' selected':'' );
+    el.innerHTML = `<div style="font-weight:700">${s.label}</div><div style="font-size:12px;color:#9aa4bd;margin-top:6px">Free</div>`;
+    el.onclick = ()=>{ document.querySelectorAll('.style-card').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); selectedStyle=s.id; };
+    stylesContainer.appendChild(el);
+  });
+}
+createStyleCards();
+
+// Handle file upload
+fileInput.addEventListener('change', async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  filenameEl.textContent = `${f.name} — ${Math.round(f.size/1024)}KB`;
+  const reader = new FileReader();
+  reader.onload = ()=>{ currentFileDataURL = reader.result; loadToCanvas(reader.result); };
+  reader.readAsDataURL(f);
+});
+
+// Load image into canvas and fit
+function loadToCanvas(dataURL){
+  imageObj = new Image();
+  imageObj.onload = ()=>{
+    // set canvas size to image but cap to max width
+    const maxW = 1000;
+    let w = imageObj.width, h = imageObj.height;
+    if(w>maxW){ h = Math.round(h*(maxW/w)); w = maxW; }
+    canvas.width = w; canvas.height = h;
+    resetTransforms();
+    applyTransforms();
+  };
+  imageObj.src = dataURL;
+}
+
+function resetTransforms(){
+  transformState = { rotate:0, flipH:false, flipV:false, brightness:100, contrast:100 };
+  document.getElementById('brightness').value = 100;
+  document.getElementById('contrast').value = 100;
+}
+
+function applyTransforms(){
+  if(!imageObj.src) return;
+  // clear & set filter
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  // translate to center for rotation & flip
+  ctx.translate(canvas.width/2, canvas.height/2);
+  const angle = (transformState.rotate || 0) * Math.PI/180;
+  ctx.rotate(angle);
+  ctx.scale(transformState.flipH ? -1 : 1, transformState.flipV ? -1 : 1);
+  ctx.filter = `brightness(${transformState.brightness}%) contrast(${transformState.contrast}%)`;
+  ctx.drawImage(imageObj, -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
+  ctx.restore();
+}
+
+// controls
+document.getElementById('brightness').addEventListener('input', (e)=>{ transformState.brightness = e.target.value; applyTransforms(); });
+document.getElementById('contrast').addEventListener('input', (e)=>{ transformState.contrast = e.target.value; applyTransforms(); });
+document.getElementById('rot-left').addEventListener('click', ()=>{ transformState.rotate -= 90; applyTransforms(); });
+document.getElementById('rot-right').addEventListener('click', ()=>{ transformState.rotate += 90; applyTransforms(); });
+document.getElementById('flip-h').addEventListener('click', ()=>{ transformState.flipH = !transformState.flipH; applyTransforms(); });
+document.getElementById('flip-v').addEventListener('click', ()=>{ transformState.flipV = !transformState.flipV; applyTransforms(); });
+
+btnClear.addEventListener('click', ()=>{
+  fileInput.value = ''; filenameEl.textContent=''; currentFileDataURL = null; ctx.clearRect(0,0,canvas.width,canvas.height);
+});
+
+downloadBtn.addEventListener('click', ()=>{
+  const link = document.createElement('a');
+  link.href = canvas.toDataURL('image/png', 0.95);
+  link.download = `sefakor_${selectedStyle}.png`;
+  link.click();
+});
+
+// Generate: send current canvas (or original upload) to server for AI stylize
+btnGenerate.addEventListener('click', async ()=>{
+  if(!currentFileDataURL){ alert('Upload a photo first'); return; }
+  setStatus('Uploading to server...', true);
+  try{
+    // We'll send the current canvas image (with edits baked) to server
+    const payloadDataURL = canvas.toDataURL('image/jpeg', 0.95);
+    const body = { image: payloadDataURL, style: selectedStyle };
+    const resp = await fetch('/api/stylize', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(body),
+    });
+    if(!resp.ok){
+      const txt = await resp.text();
+      throw new Error('Server error: '+txt);
+    }
+    setStatus('Processing on AI server (this may take 10–40s)...', true);
+    const json = await resp.json();
+    if(!json.ok){ throw new Error(json.error || 'Unknown error'); }
+
+    // json.image may be a dataURL or a remote URL — handle both
+    let out = json.image;
+    if(out && out.startsWith('http')){
+      // fetch remote URL and convert to dataURL for display
+      const r = await fetch(out);
+      const blob = await r.blob();
+      out = await blobToDataURL(blob);
+    }
+    // show result on canvas
+    imageObj = new Image();
+    imageObj.onload = ()=>{
+      // fit canvas to result
+      const maxW = 1000;
+      let w = imageObj.width, h = imageObj.height;
+      if(w>maxW){ h = Math.round(h*(maxW/w)); w = maxW; }
+      canvas.width = w; canvas.height = h;
+      resetTransforms();
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.filter = 'none';
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
+      setStatus('Done ✓', false);
+    };
+    imageObj.src = out;
+  }catch(err){
+    console.error(err);
+    setStatus('Error: '+err.message, false);
+    alert('Generation failed: '+err.message);
+  }
+});
+
+function setStatus(text, busy){
+  statusEl.innerHTML = busy ? `<span class="spinner"></span> ${text}` : text;
+}
+
+function blobToDataURL(blob){ return new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(blob); }); }
+</script>
+</body>
+</html>
